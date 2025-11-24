@@ -8,7 +8,7 @@
   box-sizing: border-box;
   height: auto;
   min-height: auto;
-  max-height: none;
+  max-height: calc(100vh - 200px);
   display: flex;
   flex-direction: column;
   overflow: visible;
@@ -109,10 +109,14 @@
   display: flex;
   justify-content: flex-start;
   align-items: flex-start;
-  overflow: visible;
+  overflow-y: auto;
+  overflow-x: visible;
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  max-height: calc(100vh - 400px);
+  flex: 1 1 auto;
+  min-height: 0;
 }
 
 .office-map {
