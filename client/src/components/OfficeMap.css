@@ -1,0 +1,490 @@
+.office-map-container {
+  background: white;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  min-width: 400px;
+  box-sizing: border-box;
+  height: auto;
+  min-height: auto;
+  max-height: none;
+  display: flex;
+  flex-direction: column;
+  overflow: visible;
+  flex: 1 1 auto;
+  position: relative;
+  animation: fadeIn 0.5s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.office-map-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+  animation: slideInLeft 0.6s ease-out;
+}
+
+@keyframes slideInLeft {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.office-map-header h2 {
+  margin: 0 0 0.5rem 0;
+  color: #333;
+}
+
+.selected-date-display {
+  color: #666;
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.legend {
+  display: flex;
+  gap: 1.5rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+  animation: slideInRight 0.6s ease-out 0.2s both;
+}
+
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.legend-color {
+  width: 20px;
+  height: 20px;
+  border-radius: 4px;
+  border: 1px solid #ddd;
+}
+
+.legend-color.free {
+  background: #4a90e2;
+}
+
+.legend-color.booked {
+  background: #999;
+}
+
+.legend-color.my {
+  background: #4caf50;
+}
+
+.office-map-wrapper {
+  width: 100%;
+  display: flex;
+  justify-content: flex-start;
+  align-items: flex-start;
+  overflow: visible;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+.office-map {
+  position: relative;
+  background: #f5f5f5;
+  border: 2px solid #ddd;
+  border-radius: 5px;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  display: block;
+  width: 100%;
+  max-width: 100%;
+  flex-shrink: 0;
+  /* Размеры задаются динамически через inline styles для сохранения пропорций */
+  /* Пропорция помещения: 640:650 - сохраняется через вычисляемые размеры */
+  min-width: 300px;
+  min-height: 300px;
+  animation: fadeInScale 0.7s ease-out 0.3s both;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.desk {
+  position: absolute;
+  /* Размеры задаются динамически через inline styles для сохранения пропорций */
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease, border-color 0.3s ease, transform 0.3s ease, opacity 0.3s ease, box-shadow 0.3s ease;
+  border: 2px solid;
+  text-align: center;
+  padding: 0.25rem;
+  box-sizing: border-box;
+  /* Размер шрифта задается динамически */
+  animation: deskFadeIn 0.4s ease-out both;
+}
+
+@keyframes deskFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.8);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.desk.updating {
+  opacity: 0.5;
+  transition: opacity 0.3s ease-out;
+}
+
+/* Плавное появление для офисной карты при загрузке */
+.office-map-wrapper {
+  transition: opacity 0.3s ease-out;
+}
+
+/* Размеры для разных типов столов задаются динамически в компоненте */
+.desk-vertical {
+  /* Вертикальные столы - размеры через inline styles */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.desk-large {
+  /* Большой стол - размеры через inline styles */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  text-align: center;
+}
+
+.desk-label {
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+  text-align: center;
+  width: 100%;
+  transition: font-size 0.3s ease;
+}
+
+.free-desk:hover .desk-label,
+.my-desk:hover .desk-label {
+  font-size: calc(1em + 5px);
+}
+
+.desk-label-line {
+  font-weight: 600;
+  text-align: center;
+  width: 100%;
+  line-height: 1.2;
+  transition: font-size 0.3s ease;
+}
+
+.desk-vertical .desk-label-line:first-child {
+  margin-bottom: 0;
+}
+
+.desk-vertical .desk-label-line:last-child {
+  margin-bottom: 0.25rem;
+}
+
+.free-desk:hover .desk-label-line,
+.my-desk:hover .desk-label-line {
+  font-size: calc(1em + 5px);
+}
+
+.desk-booked-by {
+  font-size: 0.7rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 100%;
+  color: #fff;
+  text-align: center;
+  width: 100%;
+  transition: font-size 0.3s ease;
+}
+
+.free-desk:hover .desk-booked-by,
+.my-desk:hover .desk-booked-by {
+  font-size: calc(1em + 5px);
+}
+
+.desk-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 1.5rem;
+  z-index: 20;
+  color: white;
+  pointer-events: none;
+  display: flex;
+  gap: 0.3rem;
+  align-items: center;
+  justify-content: center;
+}
+
+.desk-loading span {
+  display: inline-block;
+  width: 0.5em;
+  height: 0.5em;
+  border-radius: 50%;
+  background: currentColor;
+  animation: loading-dots 1.4s infinite ease-in-out;
+}
+
+.desk-loading span:nth-child(1) {
+  animation-delay: -0.32s;
+}
+
+.desk-loading span:nth-child(2) {
+  animation-delay: -0.16s;
+}
+
+.desk-loading span:nth-child(3) {
+  animation-delay: 0s;
+}
+
+@keyframes loading-dots {
+  0%, 80%, 100% {
+    transform: scale(0.8);
+    opacity: 0.5;
+  }
+  40% {
+    transform: scale(1.2);
+    opacity: 1;
+  }
+}
+
+.free-desk {
+  background: #4a90e2;
+  color: white;
+  border-color: #357abd;
+}
+
+.free-desk:hover {
+  background: #357abd;
+  transform: scale(1.1);
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(53, 122, 189, 0.4);
+}
+
+.booked-desk {
+  background: #999;
+  color: white;
+  border-color: #777;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.booked-desk:hover {
+  transform: scale(1.05);
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(153, 153, 153, 0.4);
+}
+
+.my-desk {
+  background: #4caf50;
+  color: white;
+  border-color: #45a049;
+  cursor: pointer;
+}
+
+.my-desk:hover {
+  background: #45a049;
+  transform: scale(1.1);
+  z-index: 10;
+  box-shadow: 0 4px 12px rgba(69, 160, 73, 0.4);
+}
+
+.section-divider {
+  pointer-events: none;
+  transition: opacity 0.3s ease-out;
+}
+
+.error-message {
+  background: #fee;
+  color: #c33;
+  padding: 0.75rem;
+  border-radius: 5px;
+  margin-bottom: 1rem;
+  font-size: 0.9rem;
+  animation: slideInError 0.3s ease-out;
+}
+
+@keyframes slideInError {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.office-map-wrapper-container {
+  display: flex;
+  gap: 2rem;
+  align-items: flex-start;
+  width: 100%;
+  box-sizing: border-box;
+  overflow: visible;
+}
+
+.office-attendees-list {
+  flex: 0 0 auto;
+  min-width: 250px;
+  max-width: 350px;
+  width: 350px;
+  background: white;
+  border-radius: 10px;
+  padding: 1.5rem;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  height: fit-content;
+  animation: fadeIn 0.6s ease-out 0.4s both;
+}
+
+.attendees-title {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1.2rem;
+  font-weight: 600;
+  border-bottom: 2px solid #4a90e2;
+  padding-bottom: 0.5rem;
+}
+
+.attendees-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.attendee-item {
+  padding: 0.75rem;
+  margin-bottom: 0.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border-left: 3px solid #4a90e2;
+  transition: background 0.2s, transform 0.2s, opacity 0.3s;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  animation: slideInListItem 0.4s ease-out both;
+}
+
+@keyframes slideInListItem {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.attendee-item:hover {
+  background: #e9ecef;
+}
+
+.attendee-info {
+  flex: 1;
+}
+
+.attendee-email {
+  font-weight: 500;
+  color: #333;
+  margin-bottom: 0.25rem;
+  font-size: 0.95rem;
+}
+
+.attendee-desk {
+  font-size: 0.85rem;
+  color: #666;
+}
+
+.band-logo {
+  width: 40px;
+  height: 40px;
+  cursor: pointer;
+  transition: transform 0.2s, opacity 0.2s;
+  flex-shrink: 0;
+  object-fit: contain;
+  border-radius: 8px;
+}
+
+.band-logo:hover {
+  transform: scale(1.1);
+  opacity: 0.9;
+}
+
+.band-logo:active {
+  transform: scale(0.95);
+}
+
+.no-attendees {
+  color: #999;
+  font-style: italic;
+  text-align: center;
+  padding: 1rem;
+}
+
+@media (max-width: 1280px) {
+  .office-map-wrapper-container {
+    flex-direction: column;
+    gap: 1.5rem;
+  }
+
+  .office-attendees-list {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+

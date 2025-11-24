@@ -1,0 +1,128 @@
+.date-picker {
+  background: white;
+  padding: 1rem;
+  border-radius: 10px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+  animation: fadeInScale 0.5s ease-out;
+}
+
+@keyframes fadeInScale {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.date-picker-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.date-picker-header h2 {
+  margin: 0;
+  font-size: 1rem;
+  color: #333;
+}
+
+.month-nav-button {
+  background: #f5f5f5;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 1.5rem;
+  color: #667eea;
+  transition: background 0.3s;
+}
+
+.month-nav-button:hover {
+  background: #e0e0e0;
+}
+
+.date-picker-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 0.4rem;
+}
+
+.weekday-header {
+  text-align: center;
+  font-weight: 600;
+  color: #666;
+  padding: 0.4rem;
+  font-size: 0.8rem;
+}
+
+.date-cell {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 5px;
+  background: white;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.date-cell:hover:not(:disabled) {
+  background: #f0f0f0;
+  border-color: #667eea;
+}
+
+.date-cell:disabled {
+  background: #f9f9f9;
+  color: #ccc;
+  cursor: not-allowed;
+  border-color: #eee;
+}
+
+.date-cell.selected {
+  background: #667eea;
+  color: white;
+  border-color: #667eea;
+  font-weight: 600;
+}
+
+.date-cell.today {
+  border-color: #667eea;
+  border-width: 2px;
+}
+
+.date-cell.empty {
+  background: transparent;
+  border: none;
+  cursor: default;
+  padding: 0.75rem;
+}
+
+.selected-date-info {
+  margin-top: 0.75rem;
+  padding: 0.5rem;
+  background: #f0f7ff;
+  border-radius: 5px;
+  text-align: center;
+  color: #333;
+  font-weight: 500;
+  font-size: 0.85rem;
+  animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
