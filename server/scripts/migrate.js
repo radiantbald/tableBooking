@@ -53,6 +53,18 @@ async function migrate() {
       )
     `);
 
+    // Таблица auth_attempts для отслеживания попыток авторизации по email
+    await client.query(`
+      CREATE TABLE IF NOT EXISTS auth_attempts (
+        id SERIAL PRIMARY KEY,
+        email VARCHAR(255) NOT NULL,
+        attempt_count INTEGER DEFAULT 1,
+        last_attempt_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        blocked_until TIMESTAMP,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+
     // Индексы
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_bookings_user_id ON bookings(user_id)
@@ -65,6 +77,12 @@ async function migrate() {
     `);
     await client.query(`
       CREATE INDEX IF NOT EXISTS idx_auth_codes_email ON auth_codes(email)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_auth_attempts_email ON auth_attempts(email)
+    `);
+    await client.query(`
+      CREATE INDEX IF NOT EXISTS idx_auth_attempts_blocked_until ON auth_attempts(blocked_until)
     `);
 
     await client.query('COMMIT');

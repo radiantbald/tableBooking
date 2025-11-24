@@ -9,6 +9,21 @@ interface DatePickerProps {
 const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateSelect }) => {
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
+  // Переключаем месяц календаря, когда selectedDate меняется
+  useEffect(() => {
+    if (selectedDate) {
+      // Парсим дату в формате YYYY-MM-DD, избегая проблем с часовыми поясами
+      const dateStr = selectedDate.split('T')[0]; // Убираем время, если есть
+      const [year, month, day] = dateStr.split('-').map(Number);
+      // Проверяем, что текущий месяц отличается от месяца выбранной даты
+      const selectedMonth = new Date(year, month - 1, 1);
+      if (currentMonth.getFullYear() !== year || currentMonth.getMonth() !== month - 1) {
+        setCurrentMonth(selectedMonth);
+      }
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate]);
+
   // Получаем серверную дату (в реальном приложении можно получить через API)
   const getServerDate = () => {
     return new Date();
@@ -84,6 +99,13 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateSelect }) =
     }
   };
 
+  const handleTodayClick = () => {
+    const today = getServerDate();
+    const todayFormatted = formatDate(today);
+    setCurrentMonth(new Date(today.getFullYear(), today.getMonth(), 1));
+    onDateSelect(todayFormatted);
+  };
+
   return (
     <div className="date-picker">
       <div className="date-picker-header">
@@ -101,7 +123,10 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateSelect }) =
           }
           
           const isEnabled = isDateEnabled(day);
-          const isSelected = selectedDate === formatDate(day);
+          const dayFormatted = formatDate(day);
+          // Нормализуем selectedDate для сравнения (убираем возможное время и лишние пробелы)
+          const selectedDateNormalized = selectedDate ? selectedDate.split('T')[0].trim() : null;
+          const isSelected = Boolean(selectedDateNormalized && selectedDateNormalized === dayFormatted);
 
           return (
             <button
@@ -115,16 +140,30 @@ const DatePicker: React.FC<DatePickerProps> = ({ selectedDate, onDateSelect }) =
           );
         })}
       </div>
-      {selectedDate && (
-        <div className="selected-date-info">
-          Выбрана дата: {new Date(selectedDate).toLocaleDateString('ru-RU', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
-          })}
-        </div>
-      )}
+      <div className="date-picker-footer">
+        <button onClick={handleTodayClick} className="today-button">
+          Сегодня
+        </button>
+        {selectedDate && (() => {
+          // Парсим дату в формате YYYY-MM-DD, избегая проблем с часовыми поясами
+          const dateStr = selectedDate.split('T')[0];
+          const [year, month, day] = dateStr.split('-').map(Number);
+          const date = new Date(year, month - 1, day);
+          
+          // Форматируем дату в сокращенном формате: пн, 24.11.2025
+          const weekdays = ['вс', 'пн', 'вт', 'ср', 'чт', 'пт', 'сб'];
+          const weekday = weekdays[date.getDay()];
+          const formattedDay = String(day).padStart(2, '0');
+          const formattedMonth = String(month).padStart(2, '0');
+          const formattedDate = `${weekday}, ${formattedDay}.${formattedMonth}.${year}`;
+          
+          return (
+            <div className="selected-date-info">
+              Выбрана дата: {formattedDate}
+            </div>
+          );
+        })()}
+      </div>
     </div>
   );
 };

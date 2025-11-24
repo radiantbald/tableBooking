@@ -4,13 +4,15 @@ import { Desk } from '../api/desks';
 interface AttendeesListProps {
   desks: Desk[];
   currentUserEmail: string;
+  selectedDate: string;
+  onAttendeeHover?: (email: string | null) => void;
 }
 
 /**
  * Компонент списка участников
  * Принцип Single Responsibility: отвечает только за отображение списка участников
  */
-const AttendeesList: React.FC<AttendeesListProps> = ({ desks, currentUserEmail }) => {
+const AttendeesList: React.FC<AttendeesListProps> = ({ desks, currentUserEmail, selectedDate, onAttendeeHover }) => {
   const bookedUsers = useMemo(() => {
     const usersMap = new Map<string, { email: string; deskLabel: string }>();
     desks.forEach(desk => {
@@ -48,14 +50,16 @@ const AttendeesList: React.FC<AttendeesListProps> = ({ desks, currentUserEmail }
     <div className="office-attendees-list">
       <h3 className="attendees-title">В этот день ты сможешь ❤️❤️❤️ поработать рядом с ребятами</h3>
       {bookedUsers.length > 0 ? (
-        <ul className="attendees-list">
+        <ul className="attendees-list" key={selectedDate}>
           {bookedUsers.map((user, index) => (
             <li 
-              key={index} 
+              key={`${user.email}-${selectedDate}-${index}`}
               className="attendee-item"
               style={{
                 animationDelay: `${index * 0.1}s`
               }}
+              onMouseEnter={() => onAttendeeHover?.(user.email)}
+              onMouseLeave={() => onAttendeeHover?.(null)}
             >
               <div className="attendee-info">
                 <div className="attendee-email">{user.email}</div>

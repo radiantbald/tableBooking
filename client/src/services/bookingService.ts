@@ -1,5 +1,5 @@
 import { Desk } from '../api/desks';
-import { bookingsApi } from '../api/bookings';
+import { bookingsApi, CheckBookingsResponse, CreateMultipleBookingsResponse } from '../api/bookings';
 
 /**
  * Сервис для работы с бронированиями
@@ -27,6 +27,42 @@ export class BookingService {
   static async cancelBooking(date: string, deskId: string): Promise<{ success: boolean; error?: string }> {
     try {
       const response = await bookingsApi.cancelBooking({ date, deskId });
+      return response;
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err.response?.data?.error || err.message || 'Ошибка сервера',
+      };
+    }
+  }
+
+  /**
+   * Проверяет доступность стола на указанные даты
+   */
+  static async checkBookings(
+    dates: string[],
+    deskId: string
+  ): Promise<CheckBookingsResponse> {
+    try {
+      const response = await bookingsApi.checkBookings({ dates, deskId });
+      return response;
+    } catch (err: any) {
+      return {
+        success: false,
+        error: err.response?.data?.error || err.message || 'Ошибка сервера',
+      };
+    }
+  }
+
+  /**
+   * Создает множественные бронирования
+   */
+  static async createMultipleBookings(
+    dates: string[],
+    deskId: string
+  ): Promise<CreateMultipleBookingsResponse> {
+    try {
+      const response = await bookingsApi.createMultipleBookings({ dates, deskId });
       return response;
     } catch (err: any) {
       return {

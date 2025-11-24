@@ -124,6 +124,112 @@ const generateCode = () => {
   return Math.floor(100000 + Math.random() * 900000).toString();
 };
 
+// Константы для ограничения попыток авторизации
+const MAX_ATTEMPTS = 5; // Максимальное количество попыток
+const BLOCK_DURATION_MS = 15 * 60 * 1000; // 15 минут блокировки
+const ATTEMPT_WINDOW_MS = 15 * 60 * 1000; // Окно для подсчета попыток - 15 минут
+
+// Проверка блокировки email (без увеличения счетчика)
+const checkAuthBlocked = async (email) => {
+  const now = new Date();
+  
+  const result = await pool.query(
+    `SELECT * FROM auth_attempts WHERE email = $1`,
+    [email]
+  );
+
+  if (result.rows.length === 0) {
+    return { allowed: true };
+  }
+
+  const attempt = result.rows[0];
+  const blockedUntil = attempt.blocked_until ? new Date(attempt.blocked_until) : null;
+
+  // Проверяем, не заблокирован ли email
+  if (blockedUntil && blockedUntil > now) {
+    const minutesLeft = Math.ceil((blockedUntil - now) / (60 * 1000));
+    return {
+      allowed: false,
+      error: `Превышено количество попыток авторизации. Попробуйте снова через ${minutesLeft} ${minutesLeft === 1 ? 'минуту' : minutesLeft < 5 ? 'минуты' : 'минут'}.`
+    };
+  }
+
+  return { allowed: true };
+};
+
+// Обновление попыток авторизации (увеличение при неудаче, сброс при успехе)
+const updateAuthAttempts = async (email, isSuccessful = false) => {
+  const now = new Date();
+  
+  // Получаем текущие попытки
+  const result = await pool.query(
+    `SELECT * FROM auth_attempts WHERE email = $1`,
+    [email]
+  );
+
+  // Если успешная авторизация - удаляем запись
+  if (isSuccessful) {
+    if (result.rows.length > 0) {
+      await pool.query(`DELETE FROM auth_attempts WHERE email = $1`, [email]);
+    }
+    return { allowed: true, attemptsLeft: MAX_ATTEMPTS };
+  }
+
+  // Неудачная попытка
+  if (result.rows.length === 0) {
+    // Первая неудачная попытка
+    await pool.query(
+      `INSERT INTO auth_attempts (email, attempt_count, last_attempt_at) 
+       VALUES ($1, 1, $2)`,
+      [email, now]
+    );
+    return { allowed: true, attemptsLeft: MAX_ATTEMPTS - 1 };
+  }
+
+  const attempt = result.rows[0];
+  const lastAttemptAt = new Date(attempt.last_attempt_at);
+
+  // Если прошло больше времени окна, сбрасываем счетчик
+  if (now - lastAttemptAt > ATTEMPT_WINDOW_MS) {
+    await pool.query(
+      `UPDATE auth_attempts 
+       SET attempt_count = 1, last_attempt_at = $1, blocked_until = NULL 
+       WHERE email = $2`,
+      [now, email]
+    );
+    return { allowed: true, attemptsLeft: MAX_ATTEMPTS - 1 };
+  }
+
+  // Увеличиваем счетчик неудачных попыток
+  const newAttemptCount = attempt.attempt_count + 1;
+  const attemptsLeft = MAX_ATTEMPTS - newAttemptCount;
+
+  if (newAttemptCount >= MAX_ATTEMPTS) {
+    // Блокируем на 15 минут
+    const blockedUntilTime = new Date(now.getTime() + BLOCK_DURATION_MS);
+    await pool.query(
+      `UPDATE auth_attempts 
+       SET attempt_count = $1, last_attempt_at = $2, blocked_until = $3 
+       WHERE email = $4`,
+      [newAttemptCount, now, blockedUntilTime, email]
+    );
+    return {
+      allowed: false,
+      error: `Превышено количество попыток авторизации. Попробуйте снова через 15 минут.`
+    };
+  }
+
+  // Обновляем счетчик
+  await pool.query(
+    `UPDATE auth_attempts 
+     SET attempt_count = $1, last_attempt_at = $2, blocked_until = NULL 
+     WHERE email = $3`,
+    [newAttemptCount, now, email]
+  );
+
+  return { allowed: true, attemptsLeft };
+};
+
 exports.requestCode = async (req, res) => {
   try {
     const { email } = req.body;
@@ -222,6 +328,15 @@ exports.verifyCode = async (req, res) => {
       });
     }
 
+    // Проверяем, не заблокирован ли email
+    const blockCheck = await checkAuthBlocked(email);
+    if (!blockCheck.allowed) {
+      return res.status(429).json({
+        success: false,
+        error: blockCheck.error
+      });
+    }
+
     // Проверяем код
     const result = await pool.query(
       `SELECT * FROM auth_codes 
@@ -231,6 +346,14 @@ exports.verifyCode = async (req, res) => {
     );
 
     if (result.rows.length === 0) {
+      // Неверный код - увеличиваем счетчик попыток
+      const attemptUpdate = await updateAuthAttempts(email, false);
+      if (!attemptUpdate.allowed) {
+        return res.status(429).json({
+          success: false,
+          error: attemptUpdate.error
+        });
+      }
       return res.status(400).json({
         success: false,
         error: 'Неверный или истёкший код'
@@ -259,6 +382,9 @@ exports.verifyCode = async (req, res) => {
     } else {
       userId = userResult.rows[0].id;
     }
+
+    // Успешная авторизация - сбрасываем счетчик попыток
+    await updateAuthAttempts(email, true);
 
     // Генерируем JWT токен
     const jwtSecret = process.env.JWT_SECRET;

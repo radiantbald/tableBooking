@@ -78,6 +78,7 @@ async function seed() {
     await client.query('TRUNCATE TABLE desks CASCADE');
     await client.query('TRUNCATE TABLE users CASCADE');
     await client.query('TRUNCATE TABLE auth_codes CASCADE');
+    await client.query('TRUNCATE TABLE auth_attempts CASCADE');
 
     // Добавляем столы
     for (const desk of desksConfig) {

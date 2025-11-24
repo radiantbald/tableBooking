@@ -27,6 +27,35 @@
   margin-bottom: 1rem;
 }
 
+.date-picker-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-top: 0.75rem;
+}
+
+.today-button {
+  background: #2196f3;
+  color: white;
+  border: none;
+  padding: 0.5rem 1.5rem;
+  border-radius: 5px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 500;
+  transition: background 0.3s, transform 0.1s;
+  white-space: nowrap;
+}
+
+.today-button:hover {
+  background: #1976d2;
+  transform: translateY(-1px);
+}
+
+.today-button:active {
+  transform: translateY(0);
+}
+
 .date-picker-header h2 {
   margin: 0;
   font-size: 1rem;
@@ -40,7 +69,7 @@
   border-radius: 5px;
   cursor: pointer;
   font-size: 1.5rem;
-  color: #667eea;
+  color: #2196f3;
   transition: background 0.3s;
 }
 
@@ -74,7 +103,7 @@
 
 .date-cell:hover:not(:disabled) {
   background: #f0f0f0;
-  border-color: #667eea;
+  border-color: #2196f3;
 }
 
 .date-cell:disabled {
@@ -85,14 +114,14 @@
 }
 
 .date-cell.selected {
-  background: #667eea;
+  background: #2196f3;
   color: white;
-  border-color: #667eea;
+  border-color: #2196f3;
   font-weight: 600;
 }
 
 .date-cell.today {
-  border-color: #667eea;
+  border-color: #2196f3;
   border-width: 2px;
 }
 
@@ -104,7 +133,6 @@
 }
 
 .selected-date-info {
-  margin-top: 0.75rem;
   padding: 0.5rem;
   background: #f0f7ff;
   border-radius: 5px;
@@ -113,6 +141,7 @@
   font-weight: 500;
   font-size: 0.85rem;
   animation: fadeIn 0.3s ease-out;
+  flex: 1;
 }
 
 @keyframes fadeIn {
