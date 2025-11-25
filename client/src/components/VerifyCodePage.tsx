@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { authApi } from '../api/auth';
 import { useAuth } from '../context/AuthContext';
+import { useCountdown } from '../hooks/useCountdown';
 import './VerifyCodePage.css';
 
 interface VerifyCodePageProps {
@@ -18,6 +19,7 @@ const VerifyCodePage: React.FC<VerifyCodePageProps> = ({ email, onBack, requestP
   const [codeSent, setCodeSent] = useState(false);
   const { login } = useAuth();
   const navigate = useNavigate();
+  const { formattedTime, isActive, start, reset } = useCountdown();
 
   useEffect(() => {
     if (requestPromise) {
@@ -25,22 +27,38 @@ const VerifyCodePage: React.FC<VerifyCodePageProps> = ({ email, onBack, requestP
         .then(() => {
           setCodeSending(false);
           setCodeSent(true);
+          reset();
         })
-        .catch((err) => {
+        .catch((err: any) => {
           setCodeSending(false);
           setCodeSent(false);
-          setError(err.message || 'Ошибка при отправке кода');
+          const errorMessage = err.response?.data?.error || err.message || 'Ошибка при отправке кода';
+          const retryAfter = err.response?.data?.retryAfter;
+          setError(errorMessage);
+          
+          // Запускаем таймер, если есть retryAfter
+          if (retryAfter && typeof retryAfter === 'number' && retryAfter > 0) {
+            start(retryAfter);
+          }
         });
     } else {
       // Если промис не передан, считаем что код уже отправлен
       setCodeSending(false);
       setCodeSent(true);
     }
-  }, [requestPromise]);
+  }, [requestPromise, reset, start]);
+  
+  useEffect(() => {
+    // Сбрасываем таймер при изменении ошибки
+    if (!error || !error.includes('Слишком много запросов')) {
+      reset();
+    }
+  }, [error, reset]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    reset();
 
     if (code.length !== 6) {
       setError('Код должен состоять из 6 цифр');
@@ -58,7 +76,13 @@ const VerifyCodePage: React.FC<VerifyCodePageProps> = ({ email, onBack, requestP
       }
     } catch (err: any) {
       const errorMessage = err.response?.data?.error || err.message || 'Ошибка сервера';
+      const retryAfter = err.response?.data?.retryAfter;
       setError(errorMessage);
+      
+      // Запускаем таймер, если есть retryAfter
+      if (retryAfter && typeof retryAfter === 'number' && retryAfter > 0) {
+        start(retryAfter);
+      }
     } finally {
       setLoading(false);
     }
@@ -91,12 +115,21 @@ const VerifyCodePage: React.FC<VerifyCodePageProps> = ({ email, onBack, requestP
                 className="code-input"
               />
             </div>
-            {error && <div className="error-message">{error}</div>}
+            {error && (
+              <div className="error-message">
+                <div>{error}</div>
+                {isActive && (
+                  <div className="countdown-timer">
+                    Повторная попытка будет доступна через: <strong>{formattedTime}</strong>
+                  </div>
+                )}
+              </div>
+            )}
             <div className="button-group">
               <button type="button" onClick={onBack} className="back-button">
                 Назад
               </button>
-              <button type="submit" disabled={loading} className="submit-button">
+              <button type="submit" disabled={loading || isActive} className="submit-button">
                 {loading ? 'Проверка...' : 'Войти'}
               </button>
             </div>

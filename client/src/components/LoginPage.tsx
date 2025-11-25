@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { authApi } from '../api/auth';
+import { useCountdown } from '../hooks/useCountdown';
 import './LoginPage.css';
 
 interface LoginPageProps {
@@ -10,10 +11,19 @@ const LoginPage: React.FC<LoginPageProps> = ({ onCodeSent }) => {
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  const { formattedTime, isActive, start, reset } = useCountdown();
+
+  useEffect(() => {
+    // Сбрасываем таймер при изменении ошибки
+    if (!error || !error.includes('Слишком много запросов')) {
+      reset();
+    }
+  }, [error, reset]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    reset();
 
     if (!email.endsWith('@rwb.ru')) {
       setError('Доступ разрешён только для корпоративной почты @rwb.ru');
@@ -33,7 +43,15 @@ const LoginPage: React.FC<LoginPageProps> = ({ onCodeSent }) => {
       .catch((err: any) => {
         setLoading(false);
         const errorMessage = err.response?.data?.error || err.message || 'Ошибка сервера';
+        const retryAfter = err.response?.data?.retryAfter;
+        
         setError(errorMessage);
+        
+        // Запускаем таймер, если есть retryAfter
+        if (retryAfter && typeof retryAfter === 'number' && retryAfter > 0) {
+          start(retryAfter);
+        }
+        
         throw new Error(errorMessage);
       });
     
@@ -57,8 +75,17 @@ const LoginPage: React.FC<LoginPageProps> = ({ onCodeSent }) => {
               disabled={loading}
             />
           </div>
-          {error && <div className="error-message">{error}</div>}
-          <button type="submit" disabled={loading} className="submit-button">
+          {error && (
+            <div className="error-message">
+              <div>{error}</div>
+              {isActive && (
+                <div className="countdown-timer">
+                  Повторная попытка будет доступна через: <strong>{formattedTime}</strong>
+                </div>
+              )}
+            </div>
+          )}
+          <button type="submit" disabled={loading || isActive} className="submit-button">
             {loading ? 'Отправка...' : 'Получить код'}
           </button>
         </form>

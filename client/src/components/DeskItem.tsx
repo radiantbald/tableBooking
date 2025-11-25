@@ -48,6 +48,21 @@ const DeskItem: React.FC<DeskItemProps> = ({
   const longPressTriggeredRef = useRef<boolean>(false);
   const clickBlockedRef = useRef<boolean>(false);
   const [isLongPressing, setIsLongPressing] = useState(false);
+  const [shouldHaveHighZIndex, setShouldHaveHighZIndex] = useState(false);
+  
+  // Отслеживаем изменения isHovered и сохраняем высокий z-index во время анимации
+  useEffect(() => {
+    if (isHovered) {
+      // Когда стол становится hovered, сразу устанавливаем высокий z-index
+      setShouldHaveHighZIndex(true);
+    } else {
+      // Когда hover убирается, сохраняем высокий z-index на время анимации (300ms)
+      const timer = setTimeout(() => {
+        setShouldHaveHighZIndex(false);
+      }, 300); // Время анимации из CSS transition
+      return () => clearTimeout(timer);
+    }
+  }, [isHovered]);
 
   const getTooltip = (): string => {
     if (desk.status === 'booked' && desk.bookedBy) {
@@ -259,7 +274,7 @@ const DeskItem: React.FC<DeskItemProps> = ({
         height: deskSize.height,
         fontSize: `${0.85 * scale}rem`,
         animationDelay: `${animationDelay}s`,
-        zIndex: isHovered ? 20 : 'auto',
+        zIndex: shouldHaveHighZIndex ? 20 : 'auto',
       }}
       onClick={handleClick}
       onMouseDown={handleMouseDown}
