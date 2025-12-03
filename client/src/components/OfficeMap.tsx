@@ -16,6 +16,7 @@ interface OfficeMapProps {
   selectedDate: string;
   currentUserEmail: string;
   onBookingSuccess: (newDate?: string) => void;
+  onError: (message: string) => void;
 }
 
 /**
@@ -27,9 +28,9 @@ const OfficeMap: React.FC<OfficeMapProps> = ({
   selectedDate,
   currentUserEmail,
   onBookingSuccess,
+  onError,
 }) => {
   const [loading, setLoading] = useState<string | null>(null);
-  const [error, setError] = useState('');
   const [isUpdating, setIsUpdating] = useState(false);
   const [mounted, setMounted] = useState(false);
   const [showWeekCalendar, setShowWeekCalendar] = useState(false);
@@ -82,15 +83,15 @@ const OfficeMap: React.FC<OfficeMapProps> = ({
 
   // Очищаем ошибку при изменении даты
   useEffect(() => {
-    setError('');
-  }, [selectedDate]);
+    onError('');
+  }, [selectedDate, onError]);
 
   /**
    * Обработчик клика по столу
    */
   const handleDeskClick = async (desk: Desk) => {
     setLoading(desk.id);
-    setError('');
+    onError('');
 
     await BookingService.handleDeskClick(
       desk,
@@ -100,7 +101,7 @@ const OfficeMap: React.FC<OfficeMapProps> = ({
         onBookingSuccess();
       },
       (errorMessage: string) => {
-        setError(errorMessage);
+        onError(errorMessage);
         setLoading(null);
       }
     );
@@ -130,7 +131,7 @@ const OfficeMap: React.FC<OfficeMapProps> = ({
 
     setShowWeekCalendar(false);
     setLoading(selectedDeskForWeek.id);
-    setError('');
+    onError('');
 
     try {
       // Получаем даты для выбранных дней недели (на год вперед)
@@ -157,7 +158,7 @@ const OfficeMap: React.FC<OfficeMapProps> = ({
       }
 
       if (dates.length === 0) {
-        setError('Не удалось сгенерировать даты для бронирования');
+        onError('Не удалось сгенерировать даты для бронирования');
         setLoading(null);
         return;
       }
@@ -230,11 +231,11 @@ const OfficeMap: React.FC<OfficeMapProps> = ({
           alert(`Все выбранные даты уже заняты другими пользователями. Ваши старые бронирования на эти даты сохранены.`);
           onBookingSuccess(); // Обновляем список
         } else {
-          setError(createResponse.error || 'Ошибка при создании бронирований');
+          onError(createResponse.error || 'Ошибка при создании бронирований');
         }
       }
     } catch (err: any) {
-      setError(err.message || 'Ошибка при бронировании');
+      onError(err.message || 'Ошибка при бронировании');
     } finally {
       setLoading(null);
       setSelectedDeskForWeek(null);
@@ -283,7 +284,6 @@ const OfficeMap: React.FC<OfficeMapProps> = ({
             <span>Моё место</span>
           </div>
         </div>
-        {error && <div className="error-message">{error}</div>}
         <div className="office-map-wrapper">
           <div
             ref={mapContainerRef}

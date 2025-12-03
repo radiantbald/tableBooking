@@ -279,6 +279,7 @@ const BookingPage: React.FC = () => {
                 selectedDate={selectedDate}
                 currentUserEmail={user?.email || ''}
                 onBookingSuccess={handleBookingSuccess}
+                onError={setError}
               />
             </div>
           </div>
